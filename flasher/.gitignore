@@ -1,0 +1,4 @@
+.flasher_venv
+.idea
+.vscode
+output.img
