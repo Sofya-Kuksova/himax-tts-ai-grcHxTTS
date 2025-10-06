@@ -20,6 +20,8 @@ int i2c_send_string(const uint8_t* buffer, size_t len);
 int i2c_recv_string(uint8_t* buffer, size_t len);
 int i2c_send_audio(int16_t* audio_buffer, size_t samples_num, size_t frame_idx, size_t frame_num);
 
+int i2cs_is_initialized(void);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

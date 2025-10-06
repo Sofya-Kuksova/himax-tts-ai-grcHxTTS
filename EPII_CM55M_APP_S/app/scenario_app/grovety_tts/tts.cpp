@@ -272,15 +272,27 @@ int TTS::run(const char* text)
                 if (idx > 0) {
                     size_t rs_output_samples =
                         downsample_audio(audio_buffer, idx == frame_num ? rem_samples : audio_chunk_size);
+
 #ifdef EXCHANGE_OVER_I2C
-                    if (i2c_send_audio(audio_buffer, rs_output_samples, idx - 1, frame_num) != 0) {
-                        // unable to send, so cancel everything
-                        ethosu_wait(&g_ethosu_drv, true);
-                        ethosu_release_driver(&g_ethosu_drv);
-                        ret = -1;
-                        goto CLEANUP;
-                    }
+    // Если i2c не инициализирован — просто пропустить отправку (debug-режим)
+    if (i2cs_is_initialized()) {
+        if (i2c_send_audio(audio_buffer, rs_output_samples, idx - 1, frame_num) != 0) {
+            // Не смогли отправить пакет — логируем, корректно освобождаем Ethos и продолжаем
+            printf("WARNING: i2c_send_audio failed — releasing Ethos and continuing (debug)\n");
+            fflush(stdout);
+            ethosu_wait(&g_ethosu_drv, true);
+            ethosu_release_driver(&g_ethosu_drv);
+            // не делаем goto CLEANUP — хотим продолжить работу для отладки
+        }
+    } else {
+        // i2c не инициализирован — пропускаем отправку и освобождаем Ethos
+        printf("NOTICE: i2c not initialized, skipping audio send (debug)\n");
+        fflush(stdout);
+        ethosu_wait(&g_ethosu_drv, true);
+        ethosu_release_driver(&g_ethosu_drv);
+    }
 #endif // EXCHANGE_OVER_I2C
+
                 }
             }
             t2 = get_timestamp_ms();
@@ -293,12 +305,19 @@ int TTS::run(const char* text)
     }
 
 #ifdef EXCHANGE_OVER_I2C
-    i2c_send_packet(ST_EOT, ERR_NONE, TYPE_NONE, 0, 0, 0, 0);
-    if (i2cs_wait_tx_done() == 0) {
-        printf("audio tx timeout\n");
-        return -1;
+    if (i2cs_is_initialized()) {
+        i2c_send_packet(ST_EOT, ERR_NONE, TYPE_NONE, 0, 0, 0, 0);
+        if (i2cs_wait_tx_done() == 0) {
+            printf("audio tx timeout (ignored in debug)\n");
+            fflush(stdout);
+            // временно не возвращаем ошибку, чтобы не ломать основной поток TTS
+        }
+    } else {
+        printf("EOT: i2c not initialized, skipping EOT\n");
+        fflush(stdout);
     }
 #endif // EXCHANGE_OVER_I2C
+
 
     printf("total preproc time: %ld ms\n", preproc_time);
     printf("total audio gen time: %ld ms\n", audio_gen_time);

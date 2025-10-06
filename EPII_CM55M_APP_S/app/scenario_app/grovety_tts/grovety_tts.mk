@@ -40,15 +40,18 @@ APPL_DEFINES += \
 
 APPL_APP_INCDIRS := \
 	$(SCENARIO_APP_ROOT)/grovety_tts/stories/$(MODEL_VARIANT) \
-	$(SCENARIO_APP_ROOT)/grovety_tts/stories/src
+	$(SCENARIO_APP_ROOT)/grovety_tts/stories/tinystories.cpp/src \
+	$(SCENARIO_APP_ROOT)/grovety_tts/stories/tinystories.cpp/stories_7m_fc_ethos-u55-64
 
 APPL_APP_CXXSRCS := \
-	$(call get_cxxsrcs, $(SCENARIO_APP_ROOT)/grovety_tts/stories/src) \
-	$(call get_cxxsrcs, $(SCENARIO_APP_ROOT)/grovety_tts/stories/$(MODEL_VARIANT))
+	$(call get_cxxsrcs, $(SCENARIO_APP_ROOT)/grovety_tts/stories/$(MODEL_VARIANT)) \
+	$(call get_cxxsrcs, $(SCENARIO_APP_ROOT)/grovety_tts/stories/tinystories.cpp/src) \
+	$(call get_cxxsrcs, $(SCENARIO_APP_ROOT)/grovety_tts/stories/tinystories.cpp/stories_7m_fc_ethos-u55-64)
 
 
-#APPL_DEFINES += \
-#	-DPROFILE_TFLITE_GRAPH
+
+APPL_DEFINES += \
+	-DPROFILE_TFLITE_GRAPH
 
 APPL_DEFINES += \
 	-DEXCHANGE_OVER_I2C

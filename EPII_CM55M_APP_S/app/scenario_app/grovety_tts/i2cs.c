@@ -16,6 +16,8 @@
 
 static HX_DRV_DEV_IIC* dev_iic_slv;
 
+static int i2cs_initialized = 0;
+
 static int i2c_rx_done   = 1;
 static int i2c_tx_done   = 1;
 static uint32_t rx_bytes = 0;
@@ -106,12 +108,17 @@ void i2cs_init()
     tx_bytes    = 0;
     i2c_rx_done = 1;
     i2c_tx_done = 1;
+
+    i2cs_initialized = 1;
 }
 
 void i2cs_deinit()
 {
     printf("[%s]\n", __FUNCTION__);
     hx_drv_i2cs_deinit(I2C_DEV_ID);
+
+    i2cs_initialized = 0;
+    dev_iic_slv = NULL;
 }
 
 void i2cs_read(void* buffer, size_t len)
@@ -267,4 +274,9 @@ int i2c_send_audio(int16_t* audio_buffer, size_t samples_num, size_t frame_idx, 
     printf("audio tx: %ld ms\n", t2 - t1);
 
     return 0;
+}
+
+int i2cs_is_initialized(void)
+{
+    return i2cs_initialized && (dev_iic_slv != NULL);
 }
